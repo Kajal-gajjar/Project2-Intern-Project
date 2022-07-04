@@ -17,6 +17,7 @@ const createCollege = async function (req, res) {
         .send({ status: false, message: "Please enter a valid input" });
 
     let { name, fullName, logoLink, isDeleted } = req.body;
+
     let college = {};
 
     // name validation
@@ -46,11 +47,14 @@ const createCollege = async function (req, res) {
       return res
         .status(400)
         .send({ status: false, message: "Please enter a valid full name" });
-    if(fullName)
-      req.body.fullName = fullName
-      .split(" ")
-      .filter((abc) => abc)
-      .join(" ");
+
+    if (fullName) {
+      fullName = req.body.fullName
+        .split(" ")
+        .filter((word) => word)
+        .join(" ");
+    }
+
     college.fullName = fullName;
 
     // logo link validation
@@ -102,35 +106,80 @@ const getDetails = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Please enter a valid college name" });
 
-    let checkCollege = await collegeModel.findOne({
-      name: collegeName,
-      isDeleted: false,
-    });
+    // solution with help of aggregation
+    let result = await collegeModel.aggregate([
+      {
+        $lookup: {
+          from: "interns",
+          localField: "_id",
+          foreignField: "collegeId",
+          as: "interns",
+        },
+      },
+      {
+        $unwind: "$interns",
+      },
+      {
+        $match: {
+          name: collegeName,
+          isDeleted: false,
+          "interns.isDeleted": false,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          name: { $first: "$name" },
+          fullName: { $first: "$fullName" },
+          logoLink: { $first: "$logoLink" },
+          interns: { $push: "$interns" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          fullName: 1,
+          logoLink: 1,
+          "interns._id": 1,
+          "interns.name": 1,
+          "interns.email": 1,
+          "interns.mobile": 1,
+        },
+      },
+    ]);
 
-    if (!checkCollege)
-      return res
-        .status(404)
-        .send({ status: false, message: "College is not found" });
+    // normal solution
 
-    let id = checkCollege._id;
+    // let checkCollege = await collegeModel.findOne({
+    //   name: collegeName,
+    //   isDeleted: false,
+    // });
 
-    let getIntern = await internModel
-      .find({ collegeId: id, isDeleted: false })
-      .select({ __v: 0, isDeleted: 0, collegeId: 0 });
+    // if (!checkCollege)
+    //   return res
+    //     .status(404)
+    //     .send({ status: false, message: "College is not found" });
 
-    if (!getIntern.length)
-      return res.status(404).send({
-        status: false,
-        message: `No intern present for ${collegeName} college`,
-      });
+    // let id = checkCollege._id;
 
-    let finalData = await collegeModel
-      .findOne({ name: collegeName, isDeleted: false })
-      .select({ name: 1, fullName: 1, logoLink: 1, _id: 0 });
+    // let getIntern = await internModel
+    //   .find({ collegeId: id, isDeleted: false })
+    //   .select({ __v: 0, isDeleted: 0, collegeId: 0 });
 
-    finalData._doc["interns"] = getIntern;
+    // if (!getIntern.length)
+    //   return res.status(404).send({
+    //     status: false,
+    //     message: `No intern present for ${collegeName} college`,
+    //   });
 
-    return res.status(200).send({ status: true, data: finalData });
+    // let result = await collegeModel
+    //   .findOne({ name: collegeName, isDeleted: false })
+    //   .select({ name: 1, fullName: 1, logoLink: 1, _id: 0 });
+
+    // result._doc["interns"] = getIntern;
+
+    return res.status(200).send({ status: true, data: result[0] });
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
   }

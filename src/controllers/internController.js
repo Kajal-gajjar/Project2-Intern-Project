@@ -29,6 +29,12 @@ const createIntern = async function (req, res) {
         status: false,
         message: "Please enter a valid Intern name",
       });
+    if (name) {
+      name = req.body.name
+        .split(" ")
+        .filter((word) => word)
+        .join(" ");
+    }
     intern.name = name;
 
     // validating the email ID

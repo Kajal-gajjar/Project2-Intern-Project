@@ -8,14 +8,11 @@ const {
 const { createIntern } = require("../controllers/internController");
 const router = express.Router();
 
-//<<------------------------------------------API Create College----------------------------------------------->>
+// college APIs
 router.post("/functionup/colleges", createCollege);
-
-//<<-----------------------------------------API Create Intern-------------------------------------------------->>
-router.post("/functionup/interns", createIntern);
-
-//<<-----------------------------------------API get Interns--------------------------------------------------->>
 router.get("/functionup/collegeDetails", getDetails);
 
+// intern API
+router.post("/functionup/interns", createIntern);
 
 module.exports = router;
