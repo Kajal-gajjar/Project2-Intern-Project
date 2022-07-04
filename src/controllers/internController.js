@@ -16,7 +16,7 @@ const createIntern = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Please enter a valid input" });
 
-    const { name, mobile, email, collegeName, isDeleted } = req.body;
+    let { name, mobile, email, collegeName, isDeleted } = req.body;
     let intern = {};
 
     // validation for intern name
@@ -102,6 +102,8 @@ const createIntern = async function (req, res) {
 
     // creating the data
     let savedData = await internModel.create(intern);
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(201).send({ status: true, data: savedData });
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });

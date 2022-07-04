@@ -178,7 +178,7 @@ const getDetails = async function (req, res) {
     //   .select({ name: 1, fullName: 1, logoLink: 1, _id: 0 });
 
     // result._doc["interns"] = getIntern;
-
+    res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(200).send({ status: true, data: result[0] });
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
