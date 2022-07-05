@@ -1,5 +1,3 @@
-const axios = require("axios");
-
 // function for string verification
 const isValid = function (value) {
   if (typeof value == "undefined" || value == null) return false;
