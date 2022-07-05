@@ -152,7 +152,7 @@ const getDetails = async function (req, res) {
     if (!result.length)
       return res
         .status(404)
-        .send({ status: false, message: "Data is not found  " });
+        .send({ status: false, message: "Data is not found" });
 
     // normal solution
 
